@@ -13,8 +13,8 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(libpointmatcher_ros REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(libpointmatcher REQUIRED)
-find_package(norlab_icp_mapper REQUIRED)
+find_package(libpointmatcher CONFIG 1.4.2 REQUIRED)
+find_package(norlab_icp_mapper CONFIG 2.0.0 REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
     "srv/SaveTrajectory.srv"

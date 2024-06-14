@@ -17,20 +17,21 @@ Check the [mapper's documentation](https://norlab-icp-mapper.readthedocs.io/en/l
 |           max_idle_time           |           Delay to wait being idle before shutting down ROS when is_online is false (in seconds).           |             [0, ∞)             |                            10.0                            |
 |            is_mapping             |                  true when map updates are wanted, false when only localization is wanted.                  |         {true, false}          |                            true                            |
 |             is_online             |                            true when online mapping is wanted, false otherwise.                             |         {true, false}          |                            true                            |
+|               is_3D               |                       true when a 3D sensor is used, false when a 2D sensor is used.                        |         {true, false}          |                            true                            |
 |   save_map_cells_on_hard_drive    |      true when map cell storage on hard drive is wanted, false when map cell storage in RAM is wanted.      |         {true, false}          |                            true                            |
 | publish_tfs_between_registrations |      When false, the map tf is published only after registration. Otherwise with map_tf_publish_rate.       |         {true, false}          |                            true                            |
 
 
 ## Node Topics
 |   Name    |                     Description                     |
-| :-------: | :-------------------------------------------------: |
+|:---------:|:---------------------------------------------------:|
 | points_in |  Topic from which the input points are retrieved.   |
 |    map    |        Topic in which the map is published.         |
 | icp_odom  | Topic in which the corrected odometry is published. |
 
 ## Node Services
 |        Name        |          Description          | Parameter Name |               Parameter Description                |
-| :----------------: |:-----------------------------:| :------------: | :------------------------------------------------: |
+|:------------------:|:-----------------------------:|:--------------:|:--------------------------------------------------:|
 |      save_map      |    Saves the current map.     |    filename    |    Path of the file in which the map is saved.     |
 |  save_trajectory   | Saves the current trajectory. |    filename    | Path of the file in which the trajectory is saved. |
 | reload_yaml_config | Reload the YAML config file.  |                |                                                    |

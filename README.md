@@ -1,6 +1,6 @@
 # norlab_icp_mapper_ros
 A bridge between [norlab_icp_mapper](https://github.com/norlab-ulaval/norlab_icp_mapper/) and ROS.
-Check the [mapper's documentation](https://norlab-icp-mapper.readthedocs.io/en/mapper-yaml-config-file/UsingInRos/) for a detailed guide.
+Check the [mapper's documentation](https://norlab-icp-mapper.readthedocs.io/en/latest/UsingInRos/) for a detailed guide.
 
 ## Node Parameters
 |               Name                |                                                 Description                                                 |        Possible values         |                       Default Value                        |

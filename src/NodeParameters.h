@@ -18,34 +18,18 @@ private:
 public:
 	std::string odomFrame;
 	std::string robotFrame;
+	std::string mappingConfig;
 	std::string initialMapFileName;
 	std::string initialRobotPoseString;
 	PM::TransformationParameters initialRobotPose;
 	std::string finalMapFileName;
 	std::string finalTrajectoryFileName;
-	std::string icpConfig;
-	std::string inputFiltersConfig;
-	std::string mapPostFiltersConfig;
-	std::string mapUpdateCondition;
-	float mapUpdateOverlap;
-	float mapUpdateDelay;
-	float mapUpdateDistance;
 	float mapPublishRate;
 	float mapTfPublishRate;
 	float maxIdleTime;
-	float minDistNewPoint;
-	float sensorMaxRange;
-	float priorDynamic;
-	float thresholdDynamic;
-	float beamHalfAngle;
-	float epsilonA;
-	float epsilonD;
-	float alpha;
-	float beta;
-	bool is3D;
-	bool isOnline;
-	bool computeProbDynamic;
+    bool is3D;
 	bool isMapping;
+	bool isOnline;
 	bool saveMapCellsOnHardDrive;
 	bool publishTfsBetweenRegistrations;
 

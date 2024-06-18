@@ -23,14 +23,8 @@ public:
 
         transformation = PM::get().TransformationRegistrar.create("RigidTransformation");
 
-        mapper = std::unique_ptr<norlab_icp_mapper::Mapper>(new norlab_icp_mapper::Mapper(params->inputFiltersConfig, params->icpConfig,
-                                                                                          params->mapPostFiltersConfig, params->mapUpdateCondition,
-                                                                                          params->mapUpdateOverlap, params->mapUpdateDelay,
-                                                                                          params->mapUpdateDistance, params->minDistNewPoint,
-                                                                                          params->sensorMaxRange, params->priorDynamic, params->thresholdDynamic,
-                                                                                          params->beamHalfAngle, params->epsilonA, params->epsilonD, params->alpha,
-                                                                                          params->beta, params->is3D, params->isOnline, params->computeProbDynamic,
-                                                                                          params->isMapping, params->saveMapCellsOnHardDrive));
+        mapper = std::make_unique<norlab_icp_mapper::Mapper>(params->mappingConfig, params->is3D, params->isOnline,
+                                               params->isMapping, params->saveMapCellsOnHardDrive);
 
         if(!params->initialMapFileName.empty())
         {
@@ -335,7 +329,7 @@ private:
     void reloadYamlConfigCallback(const std::shared_ptr<std_srvs::srv::Empty::Request> req, std::shared_ptr<std_srvs::srv::Empty::Response> res)
     {
     	RCLCPP_INFO(this->get_logger(), "Reloading YAML config");
-    	mapper->loadYamlConfig(params->inputFiltersConfig, params->icpConfig, params->mapPostFiltersConfig);
+    	mapper->loadYamlConfig(params->mappingConfig);
     }
 
     void saveMapCallback(const std::shared_ptr<norlab_icp_mapper_ros::srv::SaveMap::Request> req, std::shared_ptr<norlab_icp_mapper_ros::srv::SaveMap::Response> res)

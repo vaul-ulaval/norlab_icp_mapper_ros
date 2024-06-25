@@ -43,8 +43,7 @@ target_link_libraries(mapper_node
     ${norlab_icp_mapper_LIBRARIES}
 )
 
-rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
-target_link_libraries(mapper_node "${cpp_typesupport_target}")
+rosidl_target_interfaces(mapper_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 ament_export_dependencies(rosidl_default_runtime)
 
 install(TARGETS mapper_node

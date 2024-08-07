@@ -41,30 +41,31 @@ public:
             setRobotPose(params->initialRobotPose);
         }
 
-        int messageQueueSize;
-        if(params->isOnline)
-        {
-            tfBuffer = std::unique_ptr<tf2_ros::Buffer>(new tf2_ros::Buffer(this->get_clock()));
-            messageQueueSize = 1;
-        }
-        else
+        rclcpp::QoS sensorQoS = rclcpp::SensorDataQoS().keep_last(1);
+        auto cache_time = std::chrono::seconds(30);
+
+        if(!params->isOnline)
         {
             mapperShutdownThread = std::thread(&MapperNode::mapperShutdownLoop, this);
-            tfBuffer = std::unique_ptr<tf2_ros::Buffer>(new tf2_ros::Buffer(this->get_clock(), std::chrono::seconds(1000000)));
-            messageQueueSize = 0;
+            cache_time = std::chrono::seconds::max();
+            sensorQoS = rclcpp::SensorDataQoS().keep_all();
         }
 
-        tfListener = std::unique_ptr<tf2_ros::TransformListener>(new tf2_ros::TransformListener(*tfBuffer));
-        tfBroadcaster = std::unique_ptr<tf2_ros::TransformBroadcaster>(new tf2_ros::TransformBroadcaster(*this));
+        tfBuffer = std::unique_ptr<tf2_ros::Buffer>(new tf2_ros::Buffer(this->get_clock(), cache_time));
+        tfListener = std::make_unique<tf2_ros::TransformListener>(*tfBuffer);
+        tfBroadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
-        mapPublisher = this->create_publisher<sensor_msgs::msg::PointCloud2>("map", 2);
-        odomPublisher = this->create_publisher<nav_msgs::msg::Odometry>("icp_odom", 50);
+        rclcpp::QoS mapQoS = rclcpp::SystemDefaultsQoS().keep_last(1).best_effort().transient_local();
+        mapPublisher = this->create_publisher<sensor_msgs::msg::PointCloud2>("map", mapQoS);
+
+        rclcpp::QoS odomQoS = rclcpp::QoS(rclcpp::KeepAll()).best_effort().transient_local();
+        odomPublisher = this->create_publisher<nav_msgs::msg::Odometry>("odom", odomQoS);
 
         if(params->is3D)
         {
             robotTrajectory = std::unique_ptr<Trajectory>(new Trajectory(3));
             odomToMap = PM::Matrix::Identity(4, 4);
-            pointCloud2Subscription = this->create_subscription<sensor_msgs::msg::PointCloud2>("points_in", messageQueueSize,
+            pointCloud2Subscription = this->create_subscription<sensor_msgs::msg::PointCloud2>("points_in", sensorQoS,
                                                                                                std::bind(&MapperNode::pointCloud2Callback, this,
                                                                                                          std::placeholders::_1));
         }
@@ -72,7 +73,7 @@ public:
         {
             robotTrajectory = std::unique_ptr<Trajectory>(new Trajectory(2));
             odomToMap = PM::Matrix::Identity(3, 3);
-            laserScanSubscription = this->create_subscription<sensor_msgs::msg::LaserScan>("points_in", messageQueueSize,
+            laserScanSubscription = this->create_subscription<sensor_msgs::msg::LaserScan>("points_in", sensorQoS,
                                                                                                std::bind(&MapperNode::laserScanCallback, this,
                                                                                                          std::placeholders::_1));
         }

@@ -155,6 +155,13 @@ private:
     {
         RCLCPP_INFO(this->get_logger(), "Loading map from %s", mapFileName.c_str());
         PM::DataPoints map = PM::DataPoints::load(mapFileName);
+
+        // Temporary fix because libpointmatcher loads a 2D DataPoints with an extra z coordinate.
+        if (!params->is3D && map.featureExists("z"))
+        {
+            map.removeFeature("z");
+        }
+
         int euclideanDim = params->is3D ? 3 : 2;
         if(map.getEuclideanDim() != euclideanDim)
         {

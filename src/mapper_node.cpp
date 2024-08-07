@@ -202,7 +202,7 @@ private:
     PM::TransformationParameters findTransform(const std::string& sourceFrame, const std::string& targetFrame, const rclcpp::Time& time, const int& transformDimension)
     {
         geometry_msgs::msg::TransformStamped tf = tfBuffer->lookupTransform(targetFrame, sourceFrame, time, std::chrono::milliseconds(100));
-        return PointMatcher_ROS::rosTfToPointMatcherTransformation<float>(tf, transformDimension);
+        return PointMatcher_ROS::rosTfToPointMatcherTransformation<PM::ScalarType>(tf, transformDimension);
     }
 
     void gotInput(const PM::DataPoints& input, const std::string& sensorFrame, const rclcpp::Time& timeStamp)
@@ -248,7 +248,7 @@ private:
             PM::TransformationParameters robotToMap = sensorToMapAfterUpdate * robotToSensor;
 
             robotTrajectory->addPoint(robotToMap.topRightCorner(input.getEuclideanDim(), 1));
-            nav_msgs::msg::Odometry odomMsgOut = PointMatcher_ROS::pointMatcherTransformationToOdomMsg<float>(robotToMap, "map", params->robotFrame, timeStamp);
+            nav_msgs::msg::Odometry odomMsgOut = PointMatcher_ROS::pointMatcherTransformationToOdomMsg<PM::ScalarType>(robotToMap, "map", params->robotFrame, timeStamp);
 
             if(previousTimeStamp.nanoseconds() != 0)
             {
@@ -266,7 +266,7 @@ private:
 
             if(!params->publishTfsBetweenRegistrations)
             {
-                geometry_msgs::msg::TransformStamped currentOdomToMapTf = PointMatcher_ROS::pointMatcherTransformationToRosTf<float>(currentOdomToMap, "map", params->odomFrame, timeStamp);
+                geometry_msgs::msg::TransformStamped currentOdomToMapTf = PointMatcher_ROS::pointMatcherTransformationToRosTf<PM::ScalarType>(currentOdomToMap, "map", params->odomFrame, timeStamp);
                 tfBroadcaster->sendTransform(currentOdomToMapTf);
             }
 
@@ -282,12 +282,12 @@ private:
 
     void pointCloud2Callback(const sensor_msgs::msg::PointCloud2::SharedPtr cloudMsgIn)
     {
-        gotInput(PointMatcher_ROS::rosMsgToPointMatcherCloud<float>(*cloudMsgIn), cloudMsgIn->header.frame_id, cloudMsgIn->header.stamp);
+        gotInput(PointMatcher_ROS::rosMsgToPointMatcherCloud<PM::ScalarType>(*cloudMsgIn), cloudMsgIn->header.frame_id, cloudMsgIn->header.stamp);
     }
 
     void laserScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr scanMsgIn)
     {
-        gotInput(PointMatcher_ROS::rosMsgToPointMatcherCloud<float>(*scanMsgIn), scanMsgIn->header.frame_id, scanMsgIn->header.stamp);
+        gotInput(PointMatcher_ROS::rosMsgToPointMatcherCloud<PM::ScalarType>(*scanMsgIn), scanMsgIn->header.frame_id, scanMsgIn->header.stamp);
     }
 
     void mapPublisherLoop()
@@ -299,7 +299,7 @@ private:
         {
             if(mapper->getNewLocalMap(newMap))
             {
-                sensor_msgs::msg::PointCloud2 mapMsgOut = PointMatcher_ROS::pointMatcherCloudToRosMsg<float>(newMap, "map", this->get_clock()->now());
+                sensor_msgs::msg::PointCloud2 mapMsgOut = PointMatcher_ROS::pointMatcherCloudToRosMsg<PM::ScalarType>(newMap, "map", this->get_clock()->now());
                 mapPublisher->publish(mapMsgOut);
             }
 
@@ -321,7 +321,7 @@ private:
 
             auto currTime = this->get_clock()->now();
 
-            geometry_msgs::msg::TransformStamped currentOdomToMapTf = PointMatcher_ROS::pointMatcherTransformationToRosTf<float>(currentOdomToMap, "map",
+            geometry_msgs::msg::TransformStamped currentOdomToMapTf = PointMatcher_ROS::pointMatcherTransformationToRosTf<PM::ScalarType>(currentOdomToMap, "map",
                                                                                                                             params->odomFrame,
                                                                                                                             currTime);
             if (lastTime != currTime)
@@ -356,7 +356,7 @@ private:
     	{
     		loadMap(req->map_file_name.data);
             int homogeneousDim = params->is3D ? 4 : 3;
-            setRobotPose(PointMatcher_ROS::rosMsgToPointMatcherTransformation<float>(req->pose, homogeneousDim));
+            setRobotPose(PointMatcher_ROS::rosMsgToPointMatcherTransformation<PM::ScalarType>(req->pose, homogeneousDim));
     		robotTrajectory->clearPoints();
     	}
     	catch(const std::runtime_error& e)

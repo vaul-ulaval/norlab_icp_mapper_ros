@@ -42,7 +42,7 @@ public:
         }
 
         rclcpp::QoS sensorQoS = rclcpp::SensorDataQoS().keep_last(1);
-        auto cache_time = std::chrono::seconds(30);
+        auto cache_time = std::chrono::seconds(60);
 
         if(!params->isOnline)
         {
@@ -51,7 +51,7 @@ public:
             sensorQoS = rclcpp::SensorDataQoS().keep_all();
         }
 
-        tfBuffer = std::unique_ptr<tf2_ros::Buffer>(new tf2_ros::Buffer(this->get_clock(), cache_time));
+        tfBuffer = std::make_unique<tf2_ros::Buffer>(this->get_clock(), cache_time);
         tfListener = std::make_unique<tf2_ros::TransformListener>(*tfBuffer);
         tfBroadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
@@ -252,7 +252,14 @@ private:
             odomToMap = currentOdomToMap;
             mapTfLock.unlock();
 
+            if(!params->publishTfsBetweenRegistrations)
+            {
+                geometry_msgs::msg::TransformStamped currentOdomToMapTf = PointMatcher_ROS::pointMatcherTransformationToRosTf<PM::ScalarType>(currentOdomToMap, "map", params->odomFrame, timeStamp);
+                tfBroadcaster->sendTransform(currentOdomToMapTf);
+            }
+        
             PM::TransformationParameters robotToSensor = findTransform(params->robotFrame, sensorFrame, timeStamp, input.getHomogeneousDim());
+            PM::TransformationParameters robotToOdom = findTransform(params->robotFrame, params->odomFrame, timeStamp, input.getHomogeneousDim());
             PM::TransformationParameters robotToMap = sensorToMapAfterUpdate * robotToSensor;
 
             robotTrajectory->addPoint(robotToMap.topRightCorner(input.getEuclideanDim(), 1));
@@ -271,12 +278,6 @@ private:
             previousRobotToMap = robotToMap;
 
             odomPublisher->publish(odomMsgOut);
-
-            if(!params->publishTfsBetweenRegistrations)
-            {
-                geometry_msgs::msg::TransformStamped currentOdomToMapTf = PointMatcher_ROS::pointMatcherTransformationToRosTf<PM::ScalarType>(currentOdomToMap, "map", params->odomFrame, timeStamp);
-                tfBroadcaster->sendTransform(currentOdomToMapTf);
-            }
 
             idleTimeLock.lock();
             lastTimeInputWasProcessed = std::chrono::steady_clock::now();

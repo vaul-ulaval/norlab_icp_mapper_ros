@@ -243,7 +243,7 @@ private:
                 {
                     RCLCPP_ERROR(this->get_logger(), "Unable to save: %s", runtimeError.what());
                 }
-                throw;
+                return;
             }
             const PM::TransformationParameters& sensorToMapAfterUpdate = mapper->getPose();
 
@@ -257,7 +257,7 @@ private:
                 geometry_msgs::msg::TransformStamped currentOdomToMapTf = PointMatcher_ROS::pointMatcherTransformationToRosTf<PM::ScalarType>(currentOdomToMap, "map", params->odomFrame, timeStamp);
                 tfBroadcaster->sendTransform(currentOdomToMapTf);
             }
-        
+
             PM::TransformationParameters robotToSensor = findTransform(params->robotFrame, sensorFrame, timeStamp, input.getHomogeneousDim());
             PM::TransformationParameters robotToOdom = findTransform(params->robotFrame, params->odomFrame, timeStamp, input.getHomogeneousDim());
             PM::TransformationParameters robotToMap = sensorToMapAfterUpdate * robotToSensor;

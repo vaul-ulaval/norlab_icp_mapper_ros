@@ -207,9 +207,23 @@ private:
         }
     }
 
-    PM::TransformationParameters findTransform(const std::string& sourceFrame, const std::string& targetFrame, const rclcpp::Time& time, const int& transformDimension)
+    PM::TransformationParameters findTransform(const std::string& sourceFrame, const std::string& targetFrame, const rclcpp::Time& time, const int& transformDimension, const rclcpp::Duration& timeout = rclcpp::Duration(0))
     {
-        geometry_msgs::msg::TransformStamped tf = tfBuffer->lookupTransform(targetFrame, sourceFrame, time, std::chrono::milliseconds(100));
+        geometry_msgs::msg::TransformStamped tf;
+        if (!tfBuffer->canTransform(targetFrame, sourceFrame, time, timeout))
+        {
+            // RCLCPP_WARN(this->get_logger(), "Cannot get %s -> %s transorm at time %f. Trying latest transform.", sourceFrame.c_str(), targetFrame.c_str(), time.seconds());
+            tf = tfBuffer->lookupTransform(targetFrame, sourceFrame, tf2::TimePointZero);
+            // rclcpp::Time lastest_time(tf.header.stamp);
+            // RCLCPP_INFO(this->get_logger(), "Found latest transform at time: %f", lastest_time.seconds());
+        }
+        else
+        {
+            tf = tfBuffer->lookupTransform(targetFrame, sourceFrame, time, timeout);
+            // rclcpp::Time lastest_time(tf.header.stamp);
+            // RCLCPP_WARN(this->get_logger(), "Found %s -> %s transorm at time %f.", sourceFrame.c_str(), targetFrame.c_str(), lastest_time.seconds());
+        }
+
         return PointMatcher_ROS::rosTfToPointMatcherTransformation<PM::ScalarType>(tf, transformDimension);
     }
 
@@ -217,12 +231,12 @@ private:
     {
         try
         {
-            PM::TransformationParameters sensorToOdom = findTransform(sensorFrame, params->odomFrame, timeStamp, input.getHomogeneousDim());
+            PM::TransformationParameters sensorToOdom = findTransform(sensorFrame, params->odomFrame, timeStamp, input.getHomogeneousDim(), std::chrono::milliseconds(30));
             PM::TransformationParameters sensorToMapBeforeUpdate = odomToMap * sensorToOdom;
 
             if(hasToSetRobotPose)
             {
-                PM::TransformationParameters sensorToRobot = findTransform(sensorFrame, params->robotFrame, timeStamp, input.getHomogeneousDim());
+                PM::TransformationParameters sensorToRobot = findTransform(sensorFrame, params->robotFrame, timeStamp, input.getHomogeneousDim(), std::chrono::milliseconds(0));
                 sensorToMapBeforeUpdate = robotPoseToSet * sensorToRobot;
                 hasToSetRobotPose = false;
             }
@@ -258,8 +272,8 @@ private:
                 tfBroadcaster->sendTransform(currentOdomToMapTf);
             }
 
-            PM::TransformationParameters robotToSensor = findTransform(params->robotFrame, sensorFrame, timeStamp, input.getHomogeneousDim());
-            PM::TransformationParameters robotToOdom = findTransform(params->robotFrame, params->odomFrame, timeStamp, input.getHomogeneousDim());
+            PM::TransformationParameters robotToSensor = findTransform(params->robotFrame, sensorFrame, timeStamp, input.getHomogeneousDim(), std::chrono::milliseconds(0));
+            // PM::TransformationParameters robotToOdom = findTransform(params->robotFrame, params->odomFrame, timeStamp, input.getHomogeneousDim(), std::chrono::milliseconds(30));
             PM::TransformationParameters robotToMap = sensorToMapAfterUpdate * robotToSensor;
 
             robotTrajectory->addPoint(robotToMap.topRightCorner(input.getEuclideanDim(), 1));
